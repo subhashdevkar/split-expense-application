@@ -1,3 +1,4 @@
 node_modules
 .env
 split-expense-application-firebase-adminsdk-fbsvc-a940ff35bf.json
+.env.*
