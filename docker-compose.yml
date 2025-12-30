@@ -1,0 +1,27 @@
+services:
+  app:
+    image: subhashdevkar/split-expense-app:latest
+    build: .
+    container_name: Split-backend
+    ports:
+      - "4000:4000"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - mongo
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
