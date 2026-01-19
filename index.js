@@ -6,7 +6,8 @@ import connectDb from "./configs/mongoose.js";
 import authRouter from "./routes/authRouter.js";
 import userRouter from "./routes/userRouter.js";
 import friendRouter from "./routes/friendRouter.js";
-import clearPendingRequest from "./cron/clearPendingRequest.js";``
+import clearPendingRequest from "./cron/clearPendingRequest.js";
+``;
 import groupRouter from "./routes/groupRouter.js";
 import groupMemberRouter from "./routes/groupMemberRouter.js";
 import expenseRouter from "./routes/expenseRouter.js";

@@ -61,7 +61,6 @@ export const settlementPayment = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Balance ledger not found" });
     }
-    console.log("pairNetBalance:", pairNetBalance);
     if (amount !== netResult.net) {
       return res.status(409).json({
         success: false,
@@ -77,7 +76,6 @@ export const settlementPayment = async (req, res) => {
       note,
     });
     const settlementUserDetails = await settlement.populate("payer receiver");
-    console.log("settlementUserDetails", settlementUserDetails);
 
     // await notificationQueue.add("settlement-received", {
     //   receiver: {

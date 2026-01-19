@@ -16,7 +16,7 @@ export const sendRequest = async (req, res) => {
     const alreadySendRequest = await Friend.findOne({
       receiverId,
       senderId,
-      status: "pending",
+      $or: [{ status: "pending" }, { status: "accepted" }],
     });
     if (alreadySendRequest) {
       return res
@@ -25,7 +25,6 @@ export const sendRequest = async (req, res) => {
     }
     const friend = await Friend.create({ receiverId, senderId });
     await friend.populate("receiverId senderId");
-    console.log("Friend request", friend);
     if (friend?.receiverId?.fcmToken) {
       await sendPush(
         friend?.receiverId?.fcmToken,
@@ -49,7 +48,6 @@ export const sendRequest = async (req, res) => {
       .status(201)
       .json({ success: true, message: "Request sent successfully" });
   } catch (error) {
-    console.log("send request error", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -145,6 +143,30 @@ export const getAllFriends = async (req, res) => {
       success: true,
       message: "Friends fetched successfully",
       friends,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getAllRequests = async (req, res) => {
+  try {
+    const user = req.user;
+    const requests = await Friend.find({
+      receiverId: user.id,
+      status: "pending",
+    })
+      .populate("senderId", "name email")
+      .populate("receiverId", "name email");
+    if (!requests) {
+      return res
+        .status(401)
+        .json({ success: true, message: "no request found" });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Fetched all the requests",
+      requests,
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });

@@ -9,7 +9,6 @@ const clearPendingRequest = () => {
         status: "pending",
         createdAt: { $lt: expireTime },
       });
-      console.log("Pending expired request deleted successfully");
     } catch (error) {
       console.log(error.message);
     }

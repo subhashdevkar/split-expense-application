@@ -2,8 +2,8 @@ import Redis from "ioredis";
 
 const redis = new Redis({
   maxRetriesPerRequest: null,
-  host: process.env.REDIS_HOST,
-  port: parseInt(process.env.REDIS_PORT),
+  // host: process.env.REDIS_HOST,
+  // port: parseInt(process.env.REDIS_PORT),
 });
 //   {
 //   host: process.env.REDIS_HOST,

@@ -40,7 +40,6 @@ export const addExpense = async (req, res) => {
     const groupMembers = await GroupMember.find({ groupId })
       .populate("memberId", "name fcmToken email")
       .lean();
-    console.log("Group Members:", groupMembers);
     const group = await Group.findById(groupId).lean();
 
     const expenseSplitDoc = calculateSplits.map((s) => ({
@@ -73,13 +72,11 @@ export const addExpense = async (req, res) => {
         fcmToken: m.memberId.fcmToken,
       })),
     });
-    console.log("Notification job created:", job.id, job.name);
 
     return res
       .status(200)
       .json({ success: true, message: "Expense added successfully" });
   } catch (error) {
-    console.log("add-expense-error:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -152,7 +149,6 @@ export const editExpense = async (req, res) => {
       entityType: "Expense",
       entityId: expenseId,
     });
-    console.log("Notification job created:", job.id, job.name);
 
     // for (let member of groupMembers) {
     //   await ActivityLogs.create({
@@ -166,7 +162,6 @@ export const editExpense = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Expense updated successfully" });
   } catch (error) {
-    console.log("update expense error", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -215,11 +210,29 @@ export const deleteExpense = async (req, res) => {
 export const getGroupSummary = async (req, res) => {
   try {
     const { groupId } = req.params;
+
     if (!groupId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Group ID is required" });
+    }
+
+    // Validate if groupId is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(groupId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid Group ID format" });
+    }
+
+    // Check if group exists
+    const group = await Group.findById(groupId);
+    if (!group) {
       return res
         .status(404)
         .json({ success: false, message: "Group not found" });
     }
+
+    const id = new mongoose.Types.ObjectId(groupId);
     const cacheKey = `group:summary:${groupId}`;
     const cacheData = await redis.get(cacheKey);
     if (cacheData) {
@@ -229,11 +242,13 @@ export const getGroupSummary = async (req, res) => {
         expenses: JSON.parse(cacheData),
       });
     }
-    const expenses = await Expense.find({ groupId });
+    const expenses = await Expense.find({ groupId: id });
     if (expenses.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "No expense available" });
+      return res.status(200).json({
+        success: true,
+        message: "No expense available",
+        expenses: [],
+      });
     }
     await redis.set(cacheKey, JSON.stringify(expenses));
     return res.status(200).json({
@@ -242,6 +257,7 @@ export const getGroupSummary = async (req, res) => {
       expenses,
     });
   } catch (error) {
+    console.log("getGroupSummary error:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -256,7 +272,6 @@ export const getGroupBalance = async (req, res) => {
     }
     const cacheKey = `group:balance:${groupId}`;
     const cacheData = await redis.get(cacheKey);
-    console.log(cacheData);
     if (cacheKey && cacheData !== null) {
       return res.status(200).json({
         success: true,
@@ -265,7 +280,6 @@ export const getGroupBalance = async (req, res) => {
       });
     }
     const rows = await getGroupNetBalance(groupId);
-    console.log("rows:", rows);
     if (rows.length === 0) {
       return res
         .status(404)

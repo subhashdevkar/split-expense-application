@@ -23,7 +23,6 @@ export const register = async (req, res) => {
       .status(201)
       .json({ success: true, message: "User created successfully" });
   } catch (error) {
-    console.log(error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -113,9 +112,8 @@ export const resetPassword = async (req, res) => {
 export const sendVerifyOtp = async (req, res) => {
   try {
     const { loginId } = req.body;
-    const user = await User.findOne({
-      $or: [{ email: loginId }, { phone: loginId }],
-    });
+    // Match user by either email or phone (same as login/reset-password flows)
+    const user = await User.findOne({ email: loginId });
     if (!user) {
       return res
         .status(404)

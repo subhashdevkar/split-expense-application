@@ -5,7 +5,6 @@ const validate = (schema) => (req, res, next) => {
       field: err.path[0],
       message: err.message,
     }));
-
     return res.status(400).json({
       success: false,
       message: formattedErrors[0].message,

@@ -81,7 +81,7 @@ export const editGroup = async (req, res) => {
 
 export const deleteGroup = async (req, res) => {
   try {
-    const { groupId } = req.body;
+    const { groupId } = req.params;
     const adminId = req.user.id;
     if (!groupId) {
       return res
@@ -135,10 +135,9 @@ export const deleteGroup = async (req, res) => {
 export const getAllGroupOfUser = async (req, res) => {
   try {
     const userId = req.user.id;
-    const groups = await GroupMember.find({ memberId: userId }).populate(
-      "groupId"
-    );
-    console.log(groups);
+    const groups = await GroupMember.find({ memberId: userId })
+      .select("groupId")
+      .populate("groupId", "name id createdBy");
     return res.status(200).json({
       success: true,
       message: "All group fetched successfully",

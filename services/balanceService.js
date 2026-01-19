@@ -3,8 +3,6 @@ import Balance from "../models/balanceModel.js";
 
 export const getGroupNetBalance = async (groupId) => {
   const gId = new mongoose.Types.ObjectId(groupId);
-  console.log("groupId value:", gId, typeof gId);
-  console.log("isValid ObjectId:", mongoose.Types.ObjectId.isValid(gId));
   const rows = await Balance.aggregate([
     {
       $match: {

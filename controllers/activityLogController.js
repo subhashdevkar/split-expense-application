@@ -12,11 +12,6 @@ export const getAllActivityLogsUser = async (req, res) => {
       .limit(limit)
       .lean();
     const total = await ActivityLogs.countDocuments({ userId });
-    if (activityLogs.length === 0) {
-      return res
-        .status(200)
-        .json({ success: false, message: "Activity logs not found" });
-    }
     return res.status(200).json({
       success: true,
       message: "Activity log fetched successfully",

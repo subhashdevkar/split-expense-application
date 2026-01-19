@@ -53,7 +53,6 @@ export const createPaymentIntent = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Balance ledger not found" });
     }
-    console.log("pairNetBalance:", pairNetBalance);
     if (amount !== netResult.net) {
       return res.status(409).json({
         success: false,
