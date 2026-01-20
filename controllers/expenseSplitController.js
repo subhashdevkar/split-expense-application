@@ -8,8 +8,8 @@ export const getExpenseSplits = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Expense id is required" });
     }
-    const expenseSplits = await ExpenseSplit.find({ expenseId })
-      .populate("userId", "name email")
+    const expenseSplits = await ExpenseSplit.find({ expenseId },{expenseId:1,shareAmount:1,userId:1,_id:0})
+      .populate("userId", "name")
       .lean();
     if (expenseSplits.length === 0) {
       return res

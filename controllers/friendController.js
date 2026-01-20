@@ -43,7 +43,7 @@ export const sendRequest = async (req, res) => {
       subject: "New Friend request received",
       text: `${friend?.senderId?.name} has sent you a friend request`,
     };
-    await transporter.sendMail(mailOption);
+    // await transporter.sendMail(mailOption);
     return res
       .status(201)
       .json({ success: true, message: "Request sent successfully" });

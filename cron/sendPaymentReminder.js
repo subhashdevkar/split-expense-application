@@ -14,7 +14,7 @@ export const sendPaymentReminders = async () => {
           text: `You owe ${entry.balance} to ${entry?.toUser?.name}`,
         };
         console.log(mailOption);
-        await transporter.sendMail(mailOption);
+        // await transporter.sendMail(mailOption);
         console.log("email send successfully");
       }
     });

@@ -217,14 +217,12 @@ export const getGroupSummary = async (req, res) => {
         .json({ success: false, message: "Group ID is required" });
     }
 
-    // Validate if groupId is a valid ObjectId
     if (!mongoose.Types.ObjectId.isValid(groupId)) {
       return res
         .status(400)
         .json({ success: false, message: "Invalid Group ID format" });
     }
 
-    // Check if group exists
     const group = await Group.findById(groupId);
     if (!group) {
       return res
@@ -242,7 +240,72 @@ export const getGroupSummary = async (req, res) => {
         expenses: JSON.parse(cacheData),
       });
     }
-    const expenses = await Expense.find({ groupId: id });
+    const expenses = await Expense.aggregate([
+      {
+        $match: {
+          groupId: new mongoose.Types.ObjectId(groupId),
+        },
+      },
+
+      {
+        $lookup: {
+          from: "expensesplits",
+          localField: "_id",
+          foreignField: "expenseId",
+          as: "expenseSplits",
+        },
+      },
+
+      {
+        $lookup: {
+          from: "users",
+          localField: "expenseSplits.userId",
+          foreignField: "_id",
+          as: "users",
+        },
+      },
+
+      {
+        $addFields: {
+          expenseSplits: {
+            $map: {
+              input: "$expenseSplits",
+              as: "split",
+              in: {
+                shareAmount: "$$split.shareAmount",
+                userId: "$$split.userId",
+                name: {
+                  $let: {
+                    vars: {
+                      user: {
+                        $arrayElemAt: [
+                          {
+                            $filter: {
+                              input: "$users",
+                              as: "u",
+                              cond: { $eq: ["$$u._id", "$$split.userId"] },
+                            },
+                          },
+                          0,
+                        ],
+                      },
+                    },
+                    in: "$$user.name",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+
+      {
+        $project: {
+          users: 0,
+          __v: 0,
+        },
+      },
+    ]);
     if (expenses.length === 0) {
       return res.status(200).json({
         success: true,
@@ -280,6 +343,7 @@ export const getGroupBalance = async (req, res) => {
       });
     }
     const rows = await getGroupNetBalance(groupId);
+    console.log("rows:", rows)
     if (rows.length === 0) {
       return res
         .status(404)

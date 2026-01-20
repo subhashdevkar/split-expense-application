@@ -29,14 +29,14 @@ const worker = new Worker(
         description: message,
       });
 
-      if (receiver.email) {
-        await transporter.sendMail({
-          from: process.env.SENDER_EMAIL,
-          to: receiver.email,
-          subject: title,
-          text: message,
-        });
-      }
+      // if (receiver.email) {
+      //   await transporter.sendMail({
+      //     from: process.env.SENDER_EMAIL,
+      //     to: receiver.email,
+      //     subject: title,
+      //     text: message,
+      //   });
+      // }
       await ActivityLogs.create({
         userId: receiver._id,
         action: message,
@@ -80,17 +80,17 @@ const processGroupNotification = async (
       entityType,
       entityId,
     });
-    if (member.email) {
-      emailPromises.push(
-        transporter.sendMail({
-          from: process.env.SENDER_EMAIL,
-          to: member.email,
-          subject: title,
-          html: `<h3>${title}</h3><p>${message}</p>`,
-          text: message,
-        })
-      );
-    }
+    // if (member.email) {
+    //   emailPromises.push(
+    //     transporter.sendMail({
+    //       from: process.env.SENDER_EMAIL,
+    //       to: member.email,
+    //       subject: title,
+    //       html: `<h3>${title}</h3><p>${message}</p>`,
+    //       text: message,
+    //     })
+    //   );
+    // }
     if (member.fcmToken) {
       pushPromises.push(sendPush(member.fcmToken, title, message));
     }

@@ -33,14 +33,14 @@ export const sendPaymentReminder = async (req, res) => {
       html: `
       <h2> Payment Reminder</h2>
           <p>You owe <strong>₹${balance.balance.toFixed(
-            2
-          )}</strong> to <strong>${balance.toUser.name}</strong></p>
+        2
+      )}</strong> to <strong>${balance.toUser.name}</strong></p>
           <p>Group: ${balance.groupName || "Shared Expense"}</p>
           <p>Please settle soon! </p>
       `,
       text: `You owe ${balance.balance} to ${balance.toUser.name}`,
     };
-    await transporter.sendMail(mailOption);
+    // await transporter.sendMail(mailOption);
     await ActivityLogs.create({
       userId: balance.fromUser._id,
       action: `You owe ${balance.balance} to ${balance.toUser.name}`,
