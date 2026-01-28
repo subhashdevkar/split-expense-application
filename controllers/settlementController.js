@@ -9,16 +9,29 @@ import redis from "../configs/redis.js";
 
 export const settlementPayment = async (req, res) => {
   try {
-    const { groupId, fromUser, toUser, amount, method, note } = req.body;
-    const gId = new mongoose.Types.ObjectId(groupId);
-    const aId = new mongoose.Types.ObjectId(fromUser);
-    const bId = new mongoose.Types.ObjectId(toUser);
-    if (!groupId || !fromUser || !toUser || !amount || !method || !note) {
+    // const { groupId, fromUser, toUser, amount, method, note } = req.body;
+    const { balanceId, method, note } = req.body
+    const userId = req.user.id
+    if (!balanceId || !method || !note) {
       return res.status(404).json({
         success: false,
         message: "All details are required",
       });
     }
+    const balanceDetail = await Balance.findById(balanceId)
+    if (!balanceDetail) {
+      return res.status(404).json({ success: false, message: "balance details not found" })
+    }
+    if (userId !== balanceDetail.fromUser || userId !== balanceDetail.toUser) {
+      return res.status(409).json({ success: false, message: "You are not authorised to settle up this transaction" })
+    }
+    const gId = new mongoose.Types.ObjectId(balanceDetail.groupId);
+    const aId = new mongoose.Types.ObjectId(balanceDetail.fromUser);
+    const bId = new mongoose.Types.ObjectId(balanceDetail.toUser);
+    const groupId = balanceDetail.groupId
+    const fromUser = balanceDetail.fromUser
+    const toUser = balanceDetail.toUser
+    const amount = balanceDetail.balance
     const pairNetBalance = await Balance.aggregate([
       {
         $match: {
@@ -61,6 +74,7 @@ export const settlementPayment = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Balance ledger not found" });
     }
+    console.log("amount:", amount, "netResult:", netResult.net)
     if (amount !== netResult.net) {
       return res.status(409).json({
         success: false,
@@ -104,6 +118,7 @@ export const settlementPayment = async (req, res) => {
       .status(201)
       .json({ success: true, message: "Payment settled successfully" });
   } catch (error) {
+    console.log("error:", error)
     return res.status(500).json({ success: false, message: error.message });
   }
 };

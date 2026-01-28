@@ -79,104 +79,29 @@ export const getGroupNetBalance = async (groupId) => {
         groupId: gId
       }
     },
-
     {
       $project: {
+        balanceId: "$_id",
         balance: 1,
-        aUser: {
-          $cond: [
-            { $lt: ["$fromUser", "$toUser"] },
-            "$fromUser",
-            "$toUser"
-          ]
-        },
-        bUser: {
-          $cond: [
-            { $lt: ["$fromUser", "$toUser"] },
-            "$toUser",
-            "$fromUser"
-          ]
-        },
-        dir: {
-          $cond: [
-            {
-              $eq: [
-                "$fromUser",
-                {
-                  $cond: [
-                    { $lt: ["$fromUser", "$toUser"] },
-                    "$fromUser",
-                    "$toUser"
-                  ]
-                }
-              ]
-            },
-            1,
-            -1
-          ]
-        }
+        fromUser: "$fromUser",
+        toUser: "$toUser",
+        users: ["$fromUser", "$toUser"]
       }
     },
-
-    {
-      $group: {
-        _id: {
-          aUser: "$aUser",
-          bUser: "$bUser"
-        },
-        net: {
-          $sum: { $multiply: ["$balance", "$dir"] }
-        }
-      }
-    },
-
-    {
-      $match: {
-        net: { $ne: 0 }
-      }
-    },
-
-    {
-      $project: {
-        fromUser: {
-          $cond: [
-            { $gt: ["$net", 0] },
-            "$_id.aUser",
-            "$_id.bUser"
-          ]
-        },
-        toUser: {
-          $cond: [
-            { $gt: ["$net", 0] },
-            "$_id.bUser",
-            "$_id.aUser"
-          ]
-        },
-        balance: { $abs: "$net" },
-        _id: 0
-      }
-    },
-
-    {
-      $project: {
-        users: ["$fromUser", "$toUser"],
-        transaction: {
-          fromUser: "$fromUser",
-          toUser: "$toUser",
-          balance: "$balance"
-        }
-      }
-    },
-
     { $unwind: "$users" },
-
     {
       $group: {
         _id: "$users",
-        transactions: { $push: "$transaction" }
+        transactions: {
+          $push: {
+            balanceId: "$balanceId",
+            fromUser: "$fromUser",
+            toUser: "$toUser",
+            balance: "$balance"
+          }
+        }
       }
     },
-
     {
       $lookup: {
         from: "users",
@@ -185,27 +110,23 @@ export const getGroupNetBalance = async (groupId) => {
         as: "user"
       }
     },
-
     { $unwind: "$user" },
-
     {
       $lookup: {
         from: "users",
         localField: "transactions.fromUser",
         foreignField: "_id",
-        as: "fromUsers"
+        as: "fromUser"
       }
     },
-
     {
       $lookup: {
         from: "users",
         localField: "transactions.toUser",
         foreignField: "_id",
-        as: "toUsers"
+        as: "toUser"
       }
     },
-
     {
       $project: {
         userId: "$_id",
@@ -215,14 +136,18 @@ export const getGroupNetBalance = async (groupId) => {
             input: "$transactions",
             as: "txn",
             in: {
+              balanceId: "$$txn.balanceId",
               balance: "$$txn.balance",
               fromUser: {
                 _id: "$$txn.fromUser",
                 name: {
                   $arrayElemAt: [
-                    "$fromUsers.name",
+                    "$fromUser.name",
                     {
-                      $indexOfArray: ["$fromUsers._id", "$$txn.fromUser"]
+                      $indexOfArray: [
+                        "$fromUser._id",
+                        "$$txn.fromUser"
+                      ]
                     }
                   ]
                 }
@@ -231,9 +156,12 @@ export const getGroupNetBalance = async (groupId) => {
                 _id: "$$txn.toUser",
                 name: {
                   $arrayElemAt: [
-                    "$toUsers.name",
+                    "$toUser.name",
                     {
-                      $indexOfArray: ["$toUsers._id", "$$txn.toUser"]
+                      $indexOfArray: [
+                        "$toUser._id",
+                        "$$txn.toUser"
+                      ]
                     }
                   ]
                 }

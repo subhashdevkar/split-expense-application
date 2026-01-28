@@ -64,7 +64,6 @@ export const markAsRead = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Notification id is required " });
     }
-    // if()
     if (bulk) {
       const result = await Notification.updateMany(
         { userId, isRead: false },

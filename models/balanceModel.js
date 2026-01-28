@@ -15,6 +15,7 @@ const balanceSchema = mongoose.Schema(
     settlementId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Settlement",
+      default: null
       // required: true,
     },
     fromUser: {

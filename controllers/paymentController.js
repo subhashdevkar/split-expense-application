@@ -38,18 +38,18 @@ export const sendPaymentReminder = async (req, res) => {
           <p>Group: ${balance.groupName || "Shared Expense"}</p>
           <p>Please settle soon! </p>
       `,
-      text: `You owe ${balance.balance} to ${balance.toUser.name}`,
+      text: `You owe ${balance.balance.toFixed(2)} to ${balance.toUser.name}`,
     };
     // await transporter.sendMail(mailOption);
     await ActivityLogs.create({
       userId: balance.fromUser._id,
-      action: `You owe ${balance.balance} to ${balance.toUser.name}`,
+      action: `You owe ${balance.balance.toFixed(2)} to ${balance.toUser.name}`,
       entityType: "Reminder",
       entityId: balance._id,
     });
     await ActivityLogs.create({
       userId: creditorId,
-      action: `Sent reminder to ${balance.fromUser.name} for ₹${balance.balance}`,
+      action: `Sent reminder to ${balance.fromUser.name} for ₹${balance.balance.toFixed(2)}`,
       entityType: "Reminder",
       entityId: balance._id,
     });
@@ -57,6 +57,7 @@ export const sendPaymentReminder = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Reminder sent successfully" });
   } catch (error) {
+    console.log("error in payment remider:", error)
     return res.status(500).json({ success: false, message: error.message });
   }
 };

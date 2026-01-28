@@ -359,3 +359,45 @@ export const getGroupBalance = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+
+export const getDashboardBalances = async (req, res) => {
+  try {
+    const userId = req.user.id
+    const balance = await Balance.find({
+      settlementId: null, $or: [{ fromUser: userId }, { toUser: userId }]
+    }).populate("fromUser", "name").populate("toUser", "name")
+    console.log("balance id:", balance)
+    const youWillGetMap = new Map()
+    const youWillGiveMap = new Map()
+    let totalGet = 0
+    let totalGive = 0
+    balance.forEach((b) => {
+      const from = b.fromUser._id.toString()
+      const to = b.toUser._id.toString()
+      console.log(b)
+      if (to === userId) {
+        const prev = youWillGetMap.get(from) || 0
+        youWillGetMap.set(from, { balanceId: b._id, userId: from, name: b.fromUser.name, amount: (prev?.amount || 0) + Number(b.balance) })
+        totalGet += b.balance
+      }
+      if (from === userId) {
+        const prev = youWillGiveMap.get(to) || 0
+        youWillGiveMap.set(to, { balanceId: b._id, userId: to, name: b.toUser.name, amount: (prev?.amount || 0) + Number(b.balance) })
+        totalGive += b.balance
+      }
+    })
+    console.log(youWillGetMap)
+    const youWillGet = Array.from(youWillGetMap.values())
+    const youWillGive = Array.from(youWillGiveMap.values())
+    const netBalance = totalGet - totalGive
+    return res.status(200).json({
+      success: true,
+      data: {
+        youWillGet, youWillGive, totalGet, totalGive, netBalance
+      }
+    })
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message })
+  }
+}
